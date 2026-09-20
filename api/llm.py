@@ -625,6 +625,7 @@ def _normalise_kit(data: dict, targets: list[dict], by_id: dict) -> dict:
         question = str(item.get("question") or "").strip()
         if not target or not question:
             continue
+        signals = _normalise_checklist_values(item.get("good_answer_signals"))
         questions.append({
             "req_id": req_id,
             "question": question,
@@ -633,12 +634,23 @@ def _normalise_kit(data: dict, targets: list[dict], by_id: dict) -> dict:
             "evidence_quote": target.get("quote", ""),
             "evidence_status": target.get("status", "missing"),
             "probes": [str(p) for p in (item.get("probes") or []) if str(p).strip()][:5],
-            "good_answer_signals": [str(s) for s in (item.get("good_answer_signals") or [])
-                                    if str(s).strip()][:5],
+            "good_answer_signals": signals[:5],
         })
     general = [q for q in (data.get("general_questions") or [])
                if isinstance(q, dict) and str(q.get("question") or "").strip()]
     return {"questions": questions, "general_questions": general[:4]}
+
+
+def _normalise_checklist_values(value: Any) -> list[str]:
+    """Preserve checklist strings instead of iterating a single string by character."""
+    if isinstance(value, str):
+        return [value.strip()] if value.strip() else []
+    if isinstance(value, list):
+        values: list[str] = []
+        for item in value:
+            values.extend(_normalise_checklist_values(item))
+        return values
+    return []
 
 
 def _local_kit(targets: list[dict], by_id: dict) -> dict:

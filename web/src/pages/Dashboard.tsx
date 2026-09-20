@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { api } from "../lib/api";
 import { useApp } from "../App";
 import {
+  AgentProgress,
   CoverageBar,
   GROUP_STYLE,
   GroupChip,
@@ -193,6 +194,10 @@ export default function Dashboard() {
 
       {stats && (
         <>
+          <AgentProgress
+            active={running}
+            completed={running ? Math.min(5, Math.floor((stats.screened / Math.max(stats.candidates, 1)) * 5)) : 6}
+          />
           {/* ------------------------------------------------ metrics */}
           <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 stagger">
             <Metric

@@ -9,6 +9,21 @@ const COVERAGE: Record<string, { chip: string; label: string }> = {
   not_covered: { chip: "bg-brick-light text-brick", label: "Not covered" },
 };
 
+function checklistItems(value: unknown): string[] {
+  if (Array.isArray(value)) {
+    const parts = value.map((item) => String(item ?? ""));
+    if (parts.length > 1 && parts.every((item) => [...item].length === 1)) {
+      return [parts.join("").trim()].filter(Boolean);
+    }
+    return value
+      .flatMap((item) => Array.isArray(item) ? item : [item])
+      .map((item) => String(item ?? "").trim())
+      .filter(Boolean);
+  }
+  if (typeof value === "string" && value.trim()) return [value.trim()];
+  return [];
+}
+
 export default function Interview() {
   const { id } = useParams();
   const [cand, setCand] = useState<any>(null);
@@ -169,25 +184,25 @@ export default function Interview() {
                     </p>
                     <p className="mt-1.5 text-[13px] text-ink-500">{q.why_asked}</p>
                     <div className="mt-2"><EvidenceQuote label="Resume evidence" quote={q.evidence_quote} /></div>
-                    <div className="mt-3 grid gap-3 sm:grid-cols-2">
-                      <div className="rounded-lg bg-plum-light/50 px-3 py-2.5">
+                    <div className="mt-3 grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2">
+                      <div className="min-w-0 rounded-lg bg-plum-light/50 px-3 py-2.5">
                         <p className="label !mb-1 text-plum">Probe further with</p>
                         <ul className="space-y-1 text-[13px] text-ink-700">
-                          {q.probes?.map((p: string, k: number) => (
-                            <li key={k} className="flex gap-1.5">
-                              <span className="text-plum">→</span>
-                              {p}
+                          {checklistItems(q.probes).map((p, k) => (
+                            <li key={k} className="flex w-full min-w-0 gap-1.5">
+                              <span className="shrink-0 text-plum">→</span>
+                              <span className="min-w-0 flex-1 whitespace-normal break-normal">{p}</span>
                             </li>
                           ))}
                         </ul>
                       </div>
-                      <div className="rounded-lg bg-forest-light/50 px-3 py-2.5">
+                      <div className="min-w-0 rounded-lg bg-forest-light/50 px-3 py-2.5">
                         <p className="label !mb-1 text-forest">A good answer shows</p>
                         <ul className="space-y-1 text-[13px] text-ink-700">
-                          {q.good_answer_signals?.map((p: string, k: number) => (
-                            <li key={k} className="flex gap-1.5">
-                              <span className="text-forest">✓</span>
-                              {p}
+                          {checklistItems(q.good_answer_signals).map((p, k) => (
+                            <li key={k} className="flex w-full min-w-0 gap-1.5">
+                              <span className="shrink-0 text-forest">✓</span>
+                              <span className="min-w-0 flex-1 whitespace-normal break-normal">{p}</span>
                             </li>
                           ))}
                         </ul>

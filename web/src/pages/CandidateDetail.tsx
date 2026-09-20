@@ -21,6 +21,7 @@ export default function CandidateDetail() {
   const { id } = useParams();
   const { reveal } = useApp();
   const [d, setD] = useState<any>(null);
+  const [interview, setInterview] = useState<any>(null);
   const [open, setOpen] = useState<any>(null);
   const [audit, setAudit] = useState<any[]>([]);
   const [busy, setBusy] = useState(false);
@@ -28,7 +29,11 @@ export default function CandidateDetail() {
   const [params, setParams] = useSearchParams();
   const toast = useToast();
 
-  const load = async () => setD(await api.candidate(id!, reveal));
+  const load = async () => {
+    const [detail, interviewData] = await Promise.all([api.candidate(id!, reveal), api.interview(id!).catch(() => ({ interview: null }))]);
+    setD(detail);
+    setInterview(interviewData.interview);
+  };
   const closeDrawer = () => {
     setOpen(null);
     if (params.get("req")) setParams({}, { replace: true });
@@ -48,6 +53,9 @@ export default function CandidateDetail() {
 
   const c = d.candidate;
   const byReq: Record<string, any> = Object.fromEntries(d.evaluations.map((e: any) => [e.req_id, e]));
+  const interviewByReq: Record<string, any> = Object.fromEntries(
+    (interview?.report?.requirement_table || []).map((row: any) => [row.req_id, row])
+  );
   const reqs = d.requirements;
   const flagged = d.evaluations.filter((e: any) => e.needs_validation);
   const quoted = d.evaluations.filter((e: any) => e.quote);
@@ -92,6 +100,14 @@ export default function CandidateDetail() {
             <p className="mt-3 max-w-3xl text-[14px] leading-relaxed text-ink-700">{c.summary}</p>
             <p className="mt-2 text-[13px] text-ink-500">{c.rationale}</p>
 
+            {(c.error || c.warnings?.length > 0 || c.status === "error") && (
+              <div className="mt-3 rounded-lg border border-ochre/25 bg-ochre-light/40 px-3 py-2.5 text-[13px] text-ochre">
+                <p className="font-medium">Reasoning service unavailable — deterministic evidence analysis continued.</p>
+                {c.error && <p className="mt-1 text-[12px]">{c.error}</p>}
+                {c.warnings?.length > 0 && <p className="mt-1 text-[12px]">{c.warnings[0]}</p>}
+              </div>
+            )}
+
             <div className="mt-4 grid max-w-xl gap-3 sm:grid-cols-3">
               <MiniStat label="Must-have coverage" value={`${Math.round((c.must_score ?? 0) * 100)}%`} pct={(c.must_score ?? 0) * 100} tone="teal" />
               <MiniStat label="Nice-to-have" value={`${Math.round((c.nice_score ?? 0) * 100)}%`} pct={(c.nice_score ?? 0) * 100} tone="forest" />
@@ -115,6 +131,8 @@ export default function CandidateDetail() {
         </div>
       </header>
 
+      <EvidenceJourney evaluations={d.evaluations} />
+
       {flagged.length > 0 && (
         <section className="rounded-lg border border-ochre/30 bg-ochre-light/50 px-5 py-4">
           <p className="text-[13px] font-medium text-ochre">
@@ -137,6 +155,8 @@ export default function CandidateDetail() {
         <ul className="divide-y divide-ink/10">
           {reqs.map((r: any) => {
             const e = byReq[r.req_id];
+            const interviewRow = interviewByReq[r.req_id];
+            const flagged = e && (e.status !== "met" || e.needs_validation);
             return (
               <li key={r.req_id}>
                 <button onClick={() => e && setOpen({ e, r })}
@@ -151,6 +171,18 @@ export default function CandidateDetail() {
                       </span>
                     </span>
                     <span className="mt-2 block"><EvidenceQuote label="Resume evidence" quote={e?.quote} verified={e?.quote_verified} /></span>
+                    <span className="mt-2 block"><EvidenceQuote label="Interview evidence" quote={interviewRow?.interview_evidence} /></span>
+                    {flagged && (
+                      <span
+                        role="button"
+                        tabIndex={0}
+                        onClick={(event) => { event.stopPropagation(); setOpen({ e, r, interviewRow, flagged: true }); }}
+                        onKeyDown={(event) => { if (event.key === "Enter") { event.stopPropagation(); setOpen({ e, r, interviewRow, flagged: true }); } }}
+                        className="mt-2 inline-flex rounded-md bg-ochre-light px-2 py-1 text-[12px] font-medium text-ochre hover:bg-ochre-light/70"
+                      >
+                        Why flagged?
+                      </span>
+                    )}
                     {e?.overridden_by_human && (
                       <span className="mt-1.5 inline-block text-[12px] text-plum">Set by recruiter</span>
                     )}
@@ -212,6 +244,16 @@ export default function CandidateDetail() {
               <p className="label">Reasoning</p>
               <p className="text-[14px] leading-relaxed text-ink-700">{open.e.reasoning}</p>
             </div>
+            {open.flagged && (
+              <div className="rounded-lg border border-ochre/25 bg-ochre-light/40 px-3 py-3">
+                <p className="text-[12px] font-semibold uppercase tracking-wide text-ochre">Why flagged?</p>
+                <p className="mt-1.5 text-[13px] text-ink-700">Current status: <span className="font-medium">{open.e.status}</span></p>
+                <p className="mt-1 text-[13px] text-ink-700">{open.e.reasoning || "The available evidence is insufficient to mark this requirement as met."}</p>
+                <p className="mt-2 text-[13px] text-ink-700">Validation question: {open.e.validation_note || "No validation question recorded."}</p>
+                <EvidenceQuote label="Available resume evidence" quote={open.e.quote} verified={open.e.quote_verified} />
+                <div className="mt-2"><EvidenceQuote label="Available interview evidence" quote={open.interviewRow?.interview_evidence} /></div>
+              </div>
+            )}
             {open.e.validation_note && (
               <div className="rounded-md bg-ochre-light/60 px-3 py-2.5">
                 <p className="text-[12px] font-medium text-ochre">Needs validation</p>
@@ -288,6 +330,40 @@ function Profile({ profile }: { profile: any }) {
         </div>
       )}
     </div>
+  );
+}
+
+function EvidenceJourney({ evaluations }: { evaluations: any[] }) {
+  const total = evaluations.length || 1;
+  const met = evaluations.filter((e) => e.status === "met" && !e.needs_validation).length;
+  const flagged = evaluations.filter((e) => e.needs_validation || e.status !== "met").length;
+  const stage = flagged === 0 ? 4 : met > 0 ? 3 : 2;
+  const stages = ["Claim", "Evidence", "Challenge", "Validate"];
+  return (
+    <section className="card px-5 py-4">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div>
+          <p className="eyebrow">Evidence journey</p>
+          <p className="mt-1 text-[13px] text-ink-500">{met}/{total} requirements are verified; {flagged} need attention.</p>
+        </div>
+        <Tag tone={flagged ? "ochre" : "forest"}>{flagged ? "Review open gaps" : "Journey complete"}</Tag>
+      </div>
+      <ol className="mt-4 grid grid-cols-4 gap-2">
+        {stages.map((name, index) => {
+          const complete = index < stage;
+          const current = index === stage - 1 || (stage === 2 && index === 1);
+          return (
+            <li key={name} className={`relative text-center text-[11px] ${complete ? "text-forest" : current ? "text-ochre" : "text-ink-300"}`}>
+              {index > 0 && <span className={`absolute left-[-50%] right-[50%] top-3 h-px ${complete ? "bg-forest/40" : "bg-ink/10"}`} />}
+              <span className={`relative mx-auto grid h-6 w-6 place-items-center rounded-full border text-[10px] ${complete ? "border-forest bg-forest text-white" : current ? "border-ochre bg-ochre-light text-ochre" : "border-ink/15 bg-white"}`}>
+                {complete ? "✓" : index + 1}
+              </span>
+              <span className="mt-1 block font-medium">{name}</span>
+            </li>
+          );
+        })}
+      </ol>
+    </section>
   );
 }
 

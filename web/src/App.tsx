@@ -208,16 +208,9 @@ function FairnessBanner({ config }: { config: any }) {
       <span
         className="ml-auto cursor-help border-b border-dashed border-teal/40 text-teal"
         title={
-          s
-            ? "met 1.0 · partial 0.5 · unclear 0.25 · missing 0 · must-haves " +
-              s.weights.must * 100 +
-              "% / nice " +
-              s.weights.nice * 100 +
-              "% · Strong ≥ " +
-              s.strong_must_score +
-              " with no missing must-have · Potential ≥ " +
-              s.potential_must_score
-            : "Scoring is deterministic code"
+          "Scores and candidate groups are calculated using deterministic rules based on requirement evidence. " +
+          "LLM outputs do not directly determine the score." +
+          (s ? ` met 1.0 · partial 0.5 · unclear 0.25 · missing 0 · must-haves ${s.weights.must * 100}% / nice ${s.weights.nice * 100}% · Strong ≥ ${s.strong_must_score} · Potential ≥ ${s.potential_must_score}` : "")
         }
       >
         Scoring rule: deterministic code ⓘ

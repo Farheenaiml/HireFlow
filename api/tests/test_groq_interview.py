@@ -47,6 +47,22 @@ def test_groq_generates_candidate_specific_question(monkeypatch):
     assert "Built services" in calls[0][1]
 
 
+def test_good_answer_signals_preserve_complete_items(monkeypatch):
+    _enable_fake_groq(monkeypatch, {
+        "questions": [{
+            "req_id": "R1",
+            "question": "Describe your production Git ownership.",
+            "good_answer_signals": "Provides concrete technical details",
+        }],
+        "general_questions": [],
+    })
+    kit, _ = llm.interview_kit(REQS, EVALS, "summary")
+    assert kit["questions"][0]["good_answer_signals"] == ["Provides concrete technical details"]
+
+    normalised = llm._normalise_checklist_values([["Technical depth"], "Measurable impact"])
+    assert normalised == ["Technical depth", "Measurable impact"]
+
+
 def test_groq_answer_validation_is_structured_and_ignores_model_score(monkeypatch):
     _enable_fake_groq(monkeypatch, {
         "mapping": [{
