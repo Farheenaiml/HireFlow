@@ -1,4 +1,4 @@
-# Render blueprint for HireFlow + n8n.
+# Render blueprint for HireFlow
 
 services:
   - type: web
@@ -8,6 +8,7 @@ services:
     plan: free
     healthCheckPath: /health
     autoDeploy: true
+
     envVars:
       - key: LLM_PROVIDER
         value: groq
@@ -31,80 +32,13 @@ services:
         value: "true"
 
       - key: N8N_BASE_URL
-        fromService:
-          name: hireflow-n8n
-          type: web
-          envVarKey: RENDER_EXTERNAL_URL
+        value: https://farheen22.app.n8n.cloud
 
       - key: N8N_API_KEY
-        fromService:
-          name: hireflow-n8n
-          type: web
-          envVarKey: N8N_API_KEY
+        sync: false
 
       - key: INTERNAL_KEY
         generateValue: true
 
       - key: CORS_ORIGINS
         value: ""
-
-  - type: web
-    name: hireflow-n8n
-    runtime: image
-    image:
-      url: docker.io/n8nio/n8n:latest
-    plan: free
-    healthCheckPath: /healthz
-    autoDeploy: true
-
-    envVars:
-      - key: N8N_HOST
-        value: 0.0.0.0
-
-      - key: N8N_PORT
-        value: "5678"
-
-      - key: N8N_PROTOCOL
-        value: https
-
-      - key: N8N_SECURE_COOKIE
-        value: "true"
-
-      - key: N8N_RUNNERS_ENABLED
-        value: "true"
-
-      - key: GENERIC_TIMEZONE
-        value: Asia/Kolkata
-
-      # SQLite is n8n's default database.
-      # No Render Postgres required for this hackathon deployment.
-
-      - key: N8N_EDITOR_BASE_URL
-        fromService:
-          name: hireflow-n8n
-          type: web
-          envVarKey: RENDER_EXTERNAL_URL
-
-      - key: WEBHOOK_URL
-        fromService:
-          name: hireflow-n8n
-          type: web
-          envVarKey: RENDER_EXTERNAL_URL
-
-      - key: N8N_ENCRYPTION_KEY
-        generateValue: true
-
-      - key: HIREFLOW_API_BASE
-        fromService:
-          name: hireflow
-          type: web
-          envVarKey: RENDER_EXTERNAL_URL
-
-      - key: HIREFLOW_INTERNAL_KEY
-        fromService:
-          name: hireflow
-          type: web
-          envVarKey: INTERNAL_KEY
-
-      - key: N8N_API_KEY
-        generateValue: true
