@@ -16,7 +16,7 @@
             {
               "id": "api",
               "name": "api_base",
-              "value": "={{ $vars.HIREFLOW_API_BASE || 'http://host.docker.internal:8000' }}",
+              "value": "={{ $vars.HIREFLOW_API_BASE || 'http://127.0.0.1:8000' }}",
               "type": "string"
             },
             {

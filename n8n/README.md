@@ -112,6 +112,31 @@ ngrok http 8000
 Copy the public HTTPS URL into the `HIREFLOW_API_BASE` variable. Leave the trailing
 slash off. Then set `N8N_BASE_URL=https://<you>.app.n8n.cloud` in `api/.env`.
 
+## Render deployment
+
+The root `render.yaml` defines two services:
+
+- `hireflow`: the FastAPI API and built React SPA on one same-origin URL.
+- `hireflow-n8n`: the official n8n image with a persistent `/home/node/.n8n` disk.
+
+After Render creates both services, copy their generated HTTPS URLs into the
+corresponding configuration locations:
+
+1. In the `hireflow` service, set `N8N_BASE_URL` to the public HTTPS URL of
+  `hireflow-n8n` and set `N8N_API_KEY` to the same secret used by the n8n Header Auth
+  credential. Set `INTERNAL_KEY` to a separate random secret.
+2. In n8n Settings -> Variables, set `HIREFLOW_API_BASE` to the public HTTPS URL of
+  `hireflow`. Set `HIREFLOW_INTERNAL_KEY` to the same value as the API's `INTERNAL_KEY`.
+3. Import W0, W1 and W2. Create the `HireFlow Webhook Key` Header Auth credential with
+  header `X-API-Key`, set the same value as the API's `N8N_API_KEY`, bind it to W1/W2,
+  assign W0 as the error workflow for W1/W2, and activate W1/W2.
+4. In the n8n Render service, set `N8N_EDITOR_BASE_URL` and `WEBHOOK_URL` to its own
+  public HTTPS URL. Set a persistent `N8N_ENCRYPTION_KEY` in Render and never commit it.
+
+The Blueprint intentionally does not invent either public Render URL and does not
+store n8n credentials in workflow JSON. The n8n disk and HireFlow SQLite disk require
+paid Render plans; do not remove them unless external persistence is added first.
+
 ### Option B — deploy the API
 
 Deploy `api/` to Render (there is a `render.yaml` at the repo root — see the main
