@@ -1,5 +1,5 @@
-# Render blueprint for the same-origin HireFlow app and a separate n8n service.
-# Deploy: push this repo to GitHub, then Render -> New -> Blueprint -> pick the repo.
+# Render blueprint for HireFlow + n8n.
+
 services:
   - type: web
     name: hireflow
@@ -11,30 +11,40 @@ services:
     envVars:
       - key: LLM_PROVIDER
         value: groq
+
       - key: GROQ_API_KEY
-        sync: false          # set this in the Render dashboard, never in git
+        sync: false
+
       - key: GROQ_MODEL
         value: openai/gpt-oss-120b
+
       - key: SCREEN_DELAY
         value: "2"
+
       - key: LLM_MAX_RETRIES
         value: "3"
+
       - key: LLM_RETRY_BASE
         value: "1.5"
+
       - key: USE_N8N
         value: "true"
+
       - key: N8N_BASE_URL
         fromService:
           name: hireflow-n8n
           type: web
           envVarKey: RENDER_EXTERNAL_URL
+
       - key: N8N_API_KEY
         fromService:
           name: hireflow-n8n
           type: web
           envVarKey: N8N_API_KEY
+
       - key: INTERNAL_KEY
         generateValue: true
+
       - key: CORS_ORIGINS
         value: ""
 
@@ -46,62 +56,55 @@ services:
     plan: free
     healthCheckPath: /healthz
     autoDeploy: true
+
     envVars:
       - key: N8N_HOST
         value: 0.0.0.0
+
       - key: N8N_PORT
         value: "5678"
+
       - key: N8N_PROTOCOL
         value: https
+
       - key: N8N_SECURE_COOKIE
         value: "true"
+
       - key: N8N_RUNNERS_ENABLED
         value: "true"
+
       - key: GENERIC_TIMEZONE
         value: Asia/Kolkata
-      - key: DB_TYPE
-        value: postgresdb
-      - key: DB_POSTGRESDB_DATABASE
-        fromDatabase:
-          name: n8n-db
-          property: database
-      - key: DB_POSTGRESDB_HOST
-        fromDatabase:
-          name: n8n-db
-          property: host
-      - key: DB_POSTGRESDB_PASSWORD
-        fromDatabase:
-          name: n8n-db
-          property: password
-      - key: DB_POSTGRESDB_USER
-        fromDatabase:
-          name: n8n-db
-          property: user
+
+      # SQLite is n8n's default database.
+      # No Render Postgres required for this hackathon deployment.
+
       - key: N8N_EDITOR_BASE_URL
         fromService:
           name: hireflow-n8n
           type: web
           envVarKey: RENDER_EXTERNAL_URL
+
       - key: WEBHOOK_URL
         fromService:
           name: hireflow-n8n
           type: web
           envVarKey: RENDER_EXTERNAL_URL
+
       - key: N8N_ENCRYPTION_KEY
         generateValue: true
+
       - key: HIREFLOW_API_BASE
         fromService:
           name: hireflow
           type: web
           envVarKey: RENDER_EXTERNAL_URL
+
       - key: HIREFLOW_INTERNAL_KEY
         fromService:
           name: hireflow
           type: web
           envVarKey: INTERNAL_KEY
+
       - key: N8N_API_KEY
         generateValue: true
-
-databases:
-  - name: n8n-db
-    plan: free
