@@ -224,6 +224,32 @@ export default function Dashboard() {
             />
           </section>
 
+          <section className="card animate-rise border-ochre/20 p-5">
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <p className="eyebrow text-ochre">Recruiter attention</p>
+                <h2 className="mt-1 font-medium">Candidates needing validation</h2>
+                <p className="mt-1 text-[13px] text-ink-500">Open evidence gaps before making a human decision.</p>
+              </div>
+              <button className="btn-quiet text-[13px] text-ochre" onClick={() => nav("/board")}>Open board <Icon name="arrow" className="h-3.5 w-3.5" /></button>
+            </div>
+            {cands.filter((c) => c.needs_validation_count > 0).length ? (
+              <ul className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                {cands.filter((c) => c.needs_validation_count > 0).slice(0, 6).map((c) => (
+                  <li key={c.candidate_id}>
+                    <button onClick={() => nav(`/candidate/${c.candidate_id}`)} className="flex w-full items-center gap-3 rounded-lg border border-ochre/20 bg-ochre-light/30 px-3 py-2.5 text-left hover:border-ochre/50">
+                      <GroupChip group={c.group} />
+                      <span className="min-w-0 flex-1 truncate text-[13px] font-medium">{c.display_name || c.label}</span>
+                      <span className="text-[12px] tabular-nums text-ochre">{c.needs_validation_count} open</span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="mt-4 rounded-lg bg-forest-light/40 px-3 py-2.5 text-[13px] text-forest">No open validation items.</p>
+            )}
+          </section>
+
           {/* ------------------------------------------------ pool + leaders */}
           <section className="grid gap-5 lg:grid-cols-[1.3fr_1fr]">
             <div className="card animate-rise p-5">

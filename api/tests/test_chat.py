@@ -97,6 +97,30 @@ def test_requirement_question_cites_that_requirement(client, pool):
     assert_citations_resolve(client, pool, data)
 
 
+def test_grounded_recruiter_questions_cover_requested_cases(client, pool):
+    summary = ask(client, pool, "Summarize candidate C3.")
+    assert summary["answer"].strip()
+    assert "C3" in summary["answer"]
+    assert_citations_resolve(client, pool, summary)
+
+    evidence = ask(client, pool, "What evidence does C3 have for R7?")
+    assert evidence["answer"].strip()
+    assert "R7" in evidence["answer"] or any(c.get("req_id") == "R7" for c in evidence["citations"])
+    assert_citations_resolve(client, pool, evidence)
+
+    validation = ask(client, pool, "What still needs validation across the pool?")
+    assert validation["answer"].strip()
+    assert_citations_resolve(client, pool, validation)
+
+    comparison = ask(client, pool, "Compare C1 and C3 based on evidence.")
+    assert "C1" in comparison["answer"] and "C3" in comparison["answer"]
+    assert_citations_resolve(client, pool, comparison)
+
+    unavailable = ask(client, pool, "What is C3's salary?")
+    assert "not available" in unavailable["answer"].lower() or "no evidence" in unavailable["answer"].lower()
+    assert unavailable["citations"] == []
+
+
 # ---------------------------------------------------------------- 7: comparison
 
 def test_comparison_question_covers_both_candidates(client, pool):

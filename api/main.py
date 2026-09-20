@@ -219,6 +219,8 @@ def save_requirements(body: dict = Body(...)) -> dict:
 # ============================================================ candidates
 
 def _ingest(job_id: str, file_name: str, raw_text: str, warnings: list[str]) -> dict:
+    if len((raw_text or "").strip()) < 60:
+        raise HTTPException(400, f"{file_name}: no usable resume text was found. Upload a readable PDF, DOCX or TXT file.")
     nums = [int(r["label"][1:]) for r in
             db.q("SELECT label FROM candidates WHERE job_id=?", (job_id,))
             if r["label"][1:].isdigit()]
@@ -250,7 +252,7 @@ async def upload_candidates(job_id: str = Form(...),
         data = await f.read()
         ex = T.extract_text(f.filename, data)
         if not ex["text"].strip():
-            ex["warnings"].append("No readable text extracted from this file.")
+            raise HTTPException(400, f"{f.filename}: no readable resume text was found. Upload a readable PDF, DOCX or TXT file.")
         out.append(_ingest(job_id, f.filename, ex["text"], ex["warnings"]))
     notify_n8n("candidates.ingested", {"job_id": job_id, "count": len(out)})
     return {"candidates": out}
@@ -355,6 +357,14 @@ def screen_one(cand: dict, requirements: list[dict]) -> None:
                 e["reasoning"] = ("Evidence could not be located in the resume text, so this "
                                   "was downgraded automatically. " + e.get("reasoning", ""))
                 e["validation_note"] = e.get("validation_note") or "Confirm this claim directly."
+            if e["status"] in ("met", "partial") and re.search(
+                    r"\b(no experience|not used|never used|without experience|did not use|didn't use)\b",
+                    e.get("quote", ""), re.I):
+                e["status"] = "unclear"
+                e["needs_validation"] = True
+                e["reasoning"] = ("Conflicting evidence was found in the quoted resume text; "
+                                  "a recruiter should validate this claim. " + e.get("reasoning", ""))
+                e["validation_note"] = "Conflicting resume evidence requires recruiter review."
 
         # 4. a recruiter's override always outranks a fresh AI pass
         for e in evals:
@@ -814,14 +824,41 @@ def build_pool_context(job_id: str) -> tuple[str, dict]:
     for c in cands:
         evs = db.q("SELECT * FROM evaluations WHERE candidate_id=? ORDER BY req_id",
                    (c["candidate_id"],))
-        index["candidates"][c["label"]] = {"row": c, "evals": evs}
+        kit = db.one("SELECT questions FROM interview_kits WHERE candidate_id=?", (c["candidate_id"],))
+        interview = db.one("SELECT * FROM interviews WHERE candidate_id=?", (c["candidate_id"],))
+        candidate_audit = db.q("""SELECT insight_type, sources, timestamp FROM audit_log
+                                 WHERE candidate_id=? ORDER BY timestamp DESC LIMIT 20""",
+                               (c["candidate_id"],))
+        index["candidates"][c["label"]] = {
+            "row": c, "evals": evs,
+            "kit": db.unjs(kit["questions"], {}) if kit else {},
+            "interview": interview,
+            "audit": candidate_audit,
+        }
         lines.append(f"\nCANDIDATE {c['label']} | group={c['grp']} | score={c['score']} | "
                      f"status={c['status']}")
         lines.append(f"summary: {c['summary'] or 'not screened yet'}")
         for e in evs:
             lines.append(f"  [{c['label']}:{e['req_id']}] {e['status']}"
                          f"{' (verified)' if e['quote_verified'] else ''} :: "
-                         f"{(e['quote'] or '')[:180]}")
+                         f"{(e['quote'] or 'No evidence found')[:180]} :: {e['reasoning'] or ''}")
+        candidate_kit = index["candidates"][c["label"]]["kit"]
+        for q in candidate_kit.get("questions", [])[:8]:
+            lines.append(f"  QUESTION [{c['label']}:{q.get('req_id', '')}]: {q.get('question', '')}")
+        if interview:
+            lines.append(f"  INTERVIEW NOTES: {(interview['notes_raw'] or '')[:5000]}")
+            report = db.unjs(interview["report"], {})
+            for row in report.get("requirement_table", []):
+                lines.append(f"  INTERVIEW [{c['label']}:{row.get('req_id', '')}] "
+                             f"{row.get('coverage', 'not_covered')} :: "
+                             f"{row.get('interview_evidence') or 'No evidence found'} :: "
+                             f"{row.get('open_question') or ''}")
+            if interview.get("decision"):
+                lines.append(f"  RECRUITER DECISION: {interview['decision']} by {interview['decided_by'] or 'recruiter'}")
+        for a in index["candidates"][c["label"]]["audit"][:8]:
+            sources = db.unjs(a["sources"], {})
+            lines.append(f"  AUDIT {a['insight_type']} at {a['timestamp']}: "
+                         f"{json.dumps(sources, ensure_ascii=False)[:500]}")
     return "\n".join(lines), index
 
 
@@ -839,7 +876,31 @@ def local_chat(job_id: str, message: str, index: dict) -> dict:
             if len(tok & llm.tokens(message)) >= 2:
                 wanted_reqs.append(rid)
 
-    if any(w in msg for w in ("strong", "shortlist", "best", "top", "advance")):
+    requested_labels = sorted({m.upper() for m in re.findall(r"\bC\d+\b", message, re.I)
+                               if m.upper() in cands})
+    if requested_labels and any(w in msg for w in ("summar", "findings", "interview", "why", "evidence")):
+        for label in requested_labels:
+            d = cands[label]
+            r = d["row"]
+            lines.append(f"{label}: {r['summary'] or 'No screening summary is available.'}")
+            lines.append(f"Status: {r['grp'] or 'not screened'}; score: {r['score'] if r['score'] is not None else 'not calculated'}. {r['rationale'] or ''}")
+            for e in d["evals"]:
+                if e["status"] in ("met", "partial") or e["needs_validation"]:
+                    lines.append(f"- {e['req_id']} {e['status']}: {e['quote'] or 'No evidence found'}")
+                    citations.append({"candidate_label": label, "req_id": e["req_id"],
+                                      "why": e["reasoning"] or e["validation_note"] or ""})
+            iv = d.get("interview")
+            if iv:
+                report = db.unjs(iv["report"], {})
+                lines.append("Interview findings:")
+                for row in report.get("requirement_table", []):
+                    lines.append(f"- {row.get('req_id')}: {row.get('coverage')} — "
+                                 f"{row.get('interview_evidence') or 'No evidence found'}")
+    elif requested_labels and not any(w in msg for w in (
+            "summar", "findings", "interview", "evidence", "validat", "unclear",
+            "gap", "missing", "risk", "strong", "shortlist", "best", "top", "advance")):
+        lines.append("That information is not available in the current HireFlow evidence.")
+    elif any(w in msg for w in ("strong", "shortlist", "best", "top", "advance")):
         strong = [(l, d) for l, d in cands.items() if d["row"]["grp"] == "Strong"]
         if strong:
             lines.append(f"{len(strong)} candidate(s) sit in the Strong group on the "
@@ -871,6 +932,9 @@ def local_chat(job_id: str, message: str, index: dict) -> dict:
                                       "why": e["reasoning"] or ""})
             if len(lines) and lines[-1].endswith(":"):
                 lines.append("- No candidate has verified evidence for this requirement.")
+    elif not wanted_reqs and not requested_labels and not any(
+            word in msg for word in ("pool", "candidate", "validation", "missing", "gap")):
+        lines.append("That information is not available in the current HireFlow evidence.")
     else:
         lines.append("Here is where the pool stands:")
         for label, d in sorted(cands.items(), key=lambda x: -(x[1]["row"]["score"] or 0)):
@@ -928,6 +992,7 @@ def chat(body: dict = Body(...)) -> dict:
         data = local_chat(job_id, "who is strongest", index)
         data["answer"] = ("I can't recommend who to hire or reject - that decision stays with you. "
                           "What I can do is show the evidence.\n\n" + data["answer"])
+        data["refused"] = False
         engine = "local-evidence-engine"
     else:
         history = db.q("""SELECT role, content FROM chat_messages WHERE job_id=? AND session_id=?

@@ -97,7 +97,7 @@ export default function ChatDock({ jobId }: { jobId: string }) {
           </span>
           <div>
             <p className="text-sm font-medium">Ask the pool</p>
-            <p className="text-[11.5px] text-ink-300">Answers cite the evidence they came from</p>
+            <p className="text-[11.5px] text-ink-300">Evidence-grounded answers with source citations</p>
           </div>
         </div>
         <button className="rounded-md px-2 py-1 text-[12px] text-ink-300 hover:bg-white/10 hover:text-white" onClick={() => setOpen(false)}>
