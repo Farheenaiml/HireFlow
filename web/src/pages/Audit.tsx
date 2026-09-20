@@ -13,6 +13,7 @@ const TYPE_META: Record<string, { label: string; tone: string; blurb: string }> 
   screening: { label: "Candidate screened", tone: "teal", blurb: "Each requirement checked against the redacted resume." },
   human_override: { label: "Human override", tone: "plum", blurb: "A recruiter overruled the model's status for one requirement." },
   interview_kit: { label: "Interview kit written", tone: "cyan", blurb: "Questions generated from this candidate's evidence gaps." },
+  interview_validation: { label: "Interview validation", tone: "teal", blurb: "A candidate response was validated against one requirement." },
   interview_report: { label: "Interview report", tone: "forest", blurb: "Interview notes mapped back to the requirements." },
   human_decision: { label: "Human decision", tone: "forest", blurb: "Advance / hold / reject recorded against a named person." },
   chat_answer: { label: "Pool question answered", tone: "cyan", blurb: "Natural-language query answered from stored evidence." },
@@ -45,6 +46,13 @@ function describe(row: any): string[] {
     out.push(`Read ${s.notes_chars ?? "?"} characters of interview notes.`);
     if (s.verified_quotes != null) out.push(`${s.verified_quotes} quote(s) verified against those notes.`);
     if (s.unanswered?.length) out.push(`Left unanswered: ${s.unanswered.join(", ")}.`);
+  }
+  if (t === "interview_validation") {
+    out.push(`Requirement ${s.req_id || "?"}: evidence status changed from "${s.evidence_status_before || "missing"}" to "${s.evidence_status_after || "unclear"}".`);
+    out.push(`Validation question: ${s.validation_question || "No question recorded."}`);
+    out.push(`Candidate response: ${s.candidate_response || "No evidence found"}`);
+    out.push(`Evidence reference: ${s.evidence_reference || "No evidence found"}`);
+    if (s.reasoning) out.push(`Reasoning: ${s.reasoning}`);
   }
   if (t === "human_decision") {
     out.push(`Decision "${s.decision}" recorded by ${s.author || "recruiter"}.`);

@@ -198,9 +198,19 @@ def test_full_flow_end_to_end(client):
     rows = client.get(f"/audit?job_id={job_id}").json()["rows"]
     seen = {row["insight_type"] for row in rows}
     for expected in {"requirements", "requirements_edited", "ingest", "screening",
-                     "human_override", "interview_kit", "interview_report",
-                     "human_decision", "chat_answer", "chat_refusal"}:
+                                         "human_override", "interview_kit", "interview_report", "interview_validation",
+                                         "human_decision", "chat_answer", "chat_refusal"}:
         assert expected in seen, f"missing audit coverage for {expected}"
+        validation_rows = [row for row in rows if row["insight_type"] == "interview_validation"]
+        assert validation_rows
+        assert all(row["candidate_id"] == cid for row in validation_rows)
+        assert all(row["sources"].get("req_id") for row in validation_rows)
+        assert all(row["sources"].get("validation_question") for row in validation_rows)
+        assert all(row["sources"].get("candidate_response") for row in validation_rows)
+        assert all("evidence_status_before" in row["sources"] and
+                             "evidence_status_after" in row["sources"] for row in validation_rows)
+        assert all(row["timestamp"] and row["model"] and row["prompt_version"]
+                   for row in validation_rows)
     for row in rows:
         assert row["model"], "every audit row names the engine that produced it"
         assert row["prompt_version"], "every audit row names the prompt version"

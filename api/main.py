@@ -593,6 +593,7 @@ def evaluate_interview(body: dict = Body(...)) -> dict:
              db.q("SELECT * FROM evaluations WHERE candidate_id=?", (cid,))]
     kit_row = db.one("SELECT questions FROM interview_kits WHERE candidate_id=?", (cid,))
     kit = db.unjs(kit_row["questions"], {}) if kit_row else {}
+    before_by_req = {e["req_id"]: e for e in evals}
     res, engine = llm.evaluate_interview(reqs, evals, notes,
                                          cand["redacted_text"] or "", kit)
     mapping = res.get("mapping", [])
@@ -625,6 +626,24 @@ def evaluate_interview(body: dict = Body(...)) -> dict:
     evals = [evaluation_public(e) for e in
              db.q("SELECT * FROM evaluations WHERE candidate_id=?", (cid,))]
     res_by_req = {e["req_id"]: e for e in evals}
+    question_by_req = {q.get("req_id"): q.get("question", "")
+                       for q in kit.get("questions", []) if q.get("req_id")}
+    for m in mapping:
+        after = res_by_req.get(m.get("req_id"), {})
+        db.log_audit(
+            cand["job_id"], cid, "interview_validation", m.get("req_id"),
+            {
+                "candidate_id": cid,
+                "req_id": m.get("req_id"),
+                "validation_question": question_by_req.get(m.get("req_id")) or "No validation question recorded",
+                "candidate_response": m.get("notes_quote") or "No evidence found",
+                "evidence_status_before": before_by_req.get(m.get("req_id"), {}).get("status", "missing"),
+                "evidence_status_after": after.get("status", "unclear"),
+                "evidence_reference": m.get("notes_quote", "") or "No evidence found",
+                "reasoning": m.get("reasoning", ""),
+            },
+            engine, llm.PROMPT_VERSION, T.input_hash(notes, m.get("req_id", "")), engine,
+        )
     unanswered = [{"req_id": m["req_id"], "text": by_req.get(m["req_id"], {}).get("text", ""),
                    "priority": by_req.get(m["req_id"], {}).get("priority", "must")}
                   for m in mapping if m.get("coverage") == "not_covered"]
