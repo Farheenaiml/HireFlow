@@ -24,8 +24,10 @@ import llm
 import textops as T
 
 app = FastAPI(title="HireFlow API", version="1.0.0")
+CORS_ORIGINS = [origin.strip() for origin in os.getenv("CORS_ORIGINS", "*").split(",")
+                if origin.strip()]
 app.add_middleware(
-    CORSMiddleware, allow_origins=["*"], allow_credentials=False,
+    CORSMiddleware, allow_origins=CORS_ORIGINS, allow_credentials=False,
     allow_methods=["*"], allow_headers=["*"],
 )
 

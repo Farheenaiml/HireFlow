@@ -70,7 +70,7 @@ Edit `api/.env`:
 ```bash
 LLM_PROVIDER=groq
 GROQ_API_KEY=gsk_...
-GROQ_MODEL=llama-3.3-70b-versatile
+GROQ_MODEL=openai/gpt-oss-120b
 ```
 
 Anthropic and any OpenAI-compatible endpoint are also supported — see `.env.example`.
@@ -152,7 +152,7 @@ docker compose up --build     # API on :8000, n8n on :5678, wired to each other
 
 | Target | How |
 |---|---|
-| **Render** (API + web, one service) | Push to GitHub → Render → New → Blueprint. `render.yaml` builds the Dockerfile, mounts a 1 GB disk for SQLite, and serves the built SPA from the same origin. Set `GROQ_API_KEY` in the dashboard |
+| **Render** (API + web + n8n) | Push to GitHub -> Render -> New -> Blueprint. `render.yaml` defines the same-origin HireFlow service and a separate persistent n8n service. Enter the generated public URLs and secrets in Render/n8n; do not commit them |
 | **Docker anywhere** | `docker build -t hireflow . && docker run -p 8000:8000 hireflow` — one URL serves everything |
 | **Vercel** (frontend only) | `vercel.json` handles the SPA rewrite so `/board` does not 404 on refresh. Build with `VITE_API_BASE=https://<your-api>` — the value is baked in at build time |
 

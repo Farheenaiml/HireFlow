@@ -1,11 +1,11 @@
-# Render blueprint — one service that serves both the API and the built web app.
-# Deploy: push this repo to GitHub, then Render → New → Blueprint → pick the repo.
+# Render blueprint for the same-origin HireFlow app and a separate n8n service.
+# Deploy: push this repo to GitHub, then Render -> New -> Blueprint -> pick the repo.
 services:
   - type: web
     name: hireflow
     runtime: docker
     dockerfilePath: ./Dockerfile
-    plan: free
+    plan: starter
     healthCheckPath: /health
     autoDeploy: true
     envVars:
@@ -14,22 +14,58 @@ services:
       - key: GROQ_API_KEY
         sync: false          # set this in the Render dashboard, never in git
       - key: GROQ_MODEL
-        value: llama-3.3-70b-versatile
+        value: openai/gpt-oss-120b
       - key: SCREEN_DELAY
         value: "2"
       - key: LLM_MAX_RETRIES
         value: "3"
+      - key: LLM_RETRY_BASE
+        value: "1.5"
       - key: USE_N8N
-        value: "false"       # flip to true once n8n Cloud is wired up
+        value: "true"
       - key: N8N_BASE_URL
         sync: false
       - key: N8N_API_KEY
         sync: false
       - key: INTERNAL_KEY
         sync: false
+      - key: CORS_ORIGINS
+        value: ""
       - key: HIREFLOW_DB
         value: /var/data/hireflow.db
     disk:
       name: hireflow-data
       mountPath: /var/data
+      sizeGB: 1
+
+  - type: web
+    name: hireflow-n8n
+    runtime: image
+    image:
+      url: docker.n8n.io/n8nio/n8n:latest
+    plan: starter
+    healthCheckPath: /healthz
+    autoDeploy: true
+    envVars:
+      - key: N8N_HOST
+        value: 0.0.0.0
+      - key: N8N_PORT
+        value: "5678"
+      - key: N8N_PROTOCOL
+        value: https
+      - key: N8N_SECURE_COOKIE
+        value: "true"
+      - key: N8N_RUNNERS_ENABLED
+        value: "true"
+      - key: GENERIC_TIMEZONE
+        value: Asia/Kolkata
+      - key: N8N_EDITOR_BASE_URL
+        sync: false
+      - key: WEBHOOK_URL
+        sync: false
+      - key: N8N_ENCRYPTION_KEY
+        sync: false
+    disk:
+      name: hireflow-n8n-data
+      mountPath: /home/node/.n8n
       sizeGB: 1
