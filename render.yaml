@@ -24,11 +24,17 @@ services:
       - key: USE_N8N
         value: "true"
       - key: N8N_BASE_URL
-        sync: false
+        fromService:
+          name: hireflow-n8n
+          type: web
+          envVarKey: RENDER_EXTERNAL_URL
       - key: N8N_API_KEY
-        sync: false
+        fromService:
+          name: hireflow-n8n
+          type: web
+          envVarKey: N8N_API_KEY
       - key: INTERNAL_KEY
-        sync: false
+        generateValue: true
       - key: CORS_ORIGINS
         value: ""
 
@@ -72,10 +78,28 @@ services:
           name: n8n-db
           property: user
       - key: N8N_EDITOR_BASE_URL
-        sync: false
+        fromService:
+          name: hireflow-n8n
+          type: web
+          envVarKey: RENDER_EXTERNAL_URL
       - key: WEBHOOK_URL
-        sync: false
+        fromService:
+          name: hireflow-n8n
+          type: web
+          envVarKey: RENDER_EXTERNAL_URL
       - key: N8N_ENCRYPTION_KEY
+        generateValue: true
+      - key: HIREFLOW_API_BASE
+        fromService:
+          name: hireflow
+          type: web
+          envVarKey: RENDER_EXTERNAL_URL
+      - key: HIREFLOW_INTERNAL_KEY
+        fromService:
+          name: hireflow
+          type: web
+          envVarKey: INTERNAL_KEY
+      - key: N8N_API_KEY
         generateValue: true
 
 databases:
