@@ -5,6 +5,7 @@ import { useApp } from "../App";
 import {
   CoverageBar,
   Drawer,
+  EvidenceQuote,
   GroupChip,
   Highlighted,
   Icon,
@@ -149,11 +150,7 @@ export default function CandidateDetail() {
                         {r.priority === "must" ? "must have" : "nice to have"}
                       </span>
                     </span>
-                    {e?.quote ? (
-                      <span className="quote mt-1.5 block border-l-2 border-teal/40 pl-3">“{e.quote}”</span>
-                    ) : (
-                      <span className="mt-1.5 block text-[13px] text-ink-300">No supporting text found in the resume.</span>
-                    )}
+                    <span className="mt-2 block"><EvidenceQuote label="Resume evidence" quote={e?.quote} verified={e?.quote_verified} /></span>
                     {e?.overridden_by_human && (
                       <span className="mt-1.5 inline-block text-[12px] text-plum">Set by recruiter</span>
                     )}

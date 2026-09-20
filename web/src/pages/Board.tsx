@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { api } from "../lib/api";
 import { useApp } from "../App";
-import { Empty, GROUP_STYLE, Icon, Meter, ScoreDial, Spinner, Tag, useToast } from "../components/ui";
+import { AgentProgress, Empty, GROUP_STYLE, Icon, Meter, ScoreDial, Spinner, Tag, useToast } from "../components/ui";
 
 const GROUPS = ["Strong", "Potential", "Weak"] as const;
 
@@ -150,6 +150,8 @@ export default function Board() {
       </header>
 
       {(running || (cands.length > 0 && screened < cands.length)) && (
+        <div className="space-y-3">
+        <AgentProgress active={running || screened < cands.length} completed={Math.min(5, Math.floor((progress / 100) * 5))} />
         <div className="card animate-rise px-5 py-3.5">
           <div className="flex items-center justify-between text-[13px]">
             <span className="font-medium">
@@ -166,6 +168,7 @@ export default function Board() {
             Each candidate is screened one at a time with a pause between calls, so a provider rate limit slows
             the run instead of failing it.
           </p>
+        </div>
         </div>
       )}
 

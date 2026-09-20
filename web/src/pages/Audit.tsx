@@ -64,6 +64,21 @@ function describe(row: any): string[] {
   return out;
 }
 
+function lifecycle(trace: any[], timestamp: string) {
+  return (trace || []).flatMap((item: any) => {
+    const req = item.req_id || "Requirement";
+    const evidence = item.answer_quote || item.resume_evidence || "No evidence found";
+    return [
+      { label: "Requirement", value: req, evidence: item.resume_evidence || "No evidence found" },
+      { label: "Evidence found", value: item.resume_evidence ? "Resume evidence located" : "No evidence found", evidence: item.resume_evidence || "No evidence found" },
+      { label: "Gap / validation", value: item.missing_evidence || "Validation considered", evidence: item.resume_evidence || "No evidence found" },
+      ...(item.question ? [{ label: "Interview question", value: item.question, evidence }] : []),
+      ...(item.answer_quote ? [{ label: "Candidate response", value: item.answer_quote, evidence }] : []),
+      { label: "Updated evidence status", value: item.evidence_status || "Unverified", evidence },
+    ].map((event) => ({ ...event, timestamp }));
+  });
+}
+
 export default function Audit() {
   const { jobId } = useApp();
   const [rows, setRows] = useState<any[]>([]);
@@ -181,6 +196,23 @@ export default function Audit() {
                     </li>
                   ))}
                 </ul>
+
+                {r.sources?.validation_trace?.length > 0 && (
+                  <div className="mt-4 rounded-lg border border-teal/15 bg-teal-light/30 p-3">
+                    <p className="label !mb-2 text-teal">Evidence lifecycle</p>
+                    <ol className="space-y-2">
+                      {lifecycle(r.sources.validation_trace, r.timestamp).map((event, i) => (
+                        <li key={`${event.label}-${i}`} className="grid gap-1 sm:grid-cols-[150px_minmax(0,1fr)_150px] sm:items-start">
+                          <span className="text-[11px] font-medium uppercase tracking-wide text-ink-500">{event.label}</span>
+                          <span className="text-[12px] text-ink-700">{event.value}</span>
+                          <span className="text-[11px] text-ink-300">{event.timestamp ? new Date(event.timestamp).toLocaleString() : ""}</span>
+                          <span className="sm:col-start-2 text-[12px] italic text-ink-500">Evidence reference: {event.evidence}</span>
+                        </li>
+                      ))}
+                    </ol>
+                    {r.model === "human" && <p className="mt-2 text-[12px] font-medium text-plum">Human recruiter review recorded.</p>}
+                  </div>
+                )}
 
                 <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 border-t border-ink/8 pt-2.5 text-[11.5px] text-ink-300">
                   <span className="font-mono">engine {r.model}</span>

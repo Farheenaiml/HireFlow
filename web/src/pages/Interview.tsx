@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { api } from "../lib/api";
-import { Icon, Meter, Spinner, StatusChip, Tag, useToast } from "../components/ui";
+import { EvidenceQuote, Icon, Meter, Spinner, StatusChip, Tag, useToast } from "../components/ui";
 
 const COVERAGE: Record<string, { chip: string; label: string }> = {
   covered: { chip: "bg-forest-light text-forest", label: "Covered" },
@@ -168,9 +168,7 @@ export default function Interview() {
                       {q.question}
                     </p>
                     <p className="mt-1.5 text-[13px] text-ink-500">{q.why_asked}</p>
-                    {q.evidence_quote && (
-                      <p className="quote mt-2 border-l-2 border-teal/40 pl-3 text-[13px]">“{q.evidence_quote}”</p>
-                    )}
+                    <div className="mt-2"><EvidenceQuote label="Resume evidence" quote={q.evidence_quote} /></div>
                     <div className="mt-3 grid gap-3 sm:grid-cols-2">
                       <div className="rounded-lg bg-plum-light/50 px-3 py-2.5">
                         <p className="label !mb-1 text-plum">Probe further with</p>
@@ -338,14 +336,11 @@ export default function Interview() {
                       <p className="text-ink-700">{row.requirement}</p>
                     </td>
                     <td className="py-3 pr-3">
-                      <StatusChip status={row.resume_status} />
+                      <EvidenceQuote label="Resume evidence" quote={row.resume_evidence} empty="No evidence found" />
+                      <div className="mt-2"><StatusChip status={row.resume_status} /></div>
                     </td>
                     <td className="py-3 pr-3">
-                      {row.interview_evidence ? (
-                        <span className="quote">“{row.interview_evidence}”</span>
-                      ) : (
-                        <span className="text-ink-300">Not discussed</span>
-                      )}
+                      <EvidenceQuote label="Interview evidence" quote={row.interview_evidence} empty="No evidence found" />
                       {row.open_question && <p className="mt-1.5 text-[12px] text-ochre">{row.open_question}</p>}
                     </td>
                     <td className="py-3">

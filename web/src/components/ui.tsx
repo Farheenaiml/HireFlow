@@ -103,6 +103,73 @@ export function StatusChip({ status, verified }: { status: string; verified?: bo
   );
 }
 
+export function EvidenceQuote({
+  label,
+  quote,
+  empty = "No evidence found",
+  verified,
+}: { label: string; quote?: string | null; empty?: string; verified?: boolean }) {
+  return (
+    <div className="rounded-lg border border-ink/10 bg-paper/60 px-3 py-2.5">
+      <div className="flex items-center justify-between gap-2">
+        <p className="text-[10px] font-semibold uppercase tracking-[.12em] text-ink-300">{label}</p>
+        {quote && verified != null && (
+          <span className={`text-[10px] font-medium ${verified ? "text-forest" : "text-ochre"}`}>
+            {verified ? "source verified" : "not verified"}
+          </span>
+        )}
+      </div>
+      {quote ? (
+        <p className="quote mt-1.5 border-l-2 border-teal/40 pl-3 text-[13px]">“{quote}”</p>
+      ) : (
+        <p className="mt-1.5 text-[13px] italic text-ink-300">{empty}</p>
+      )}
+    </div>
+  );
+}
+
+export function AgentProgress({
+  active,
+  completed = 0,
+}: { active: boolean; completed?: number }) {
+  const stages = [
+    "Analyzing role",
+    "Extracting candidate evidence",
+    "Matching requirements",
+    "Identifying gaps",
+    "Preparing validation questions",
+    "Building recruiter summary",
+  ];
+  const current = active ? Math.min(stages.length - 1, Math.max(0, completed)) : stages.length;
+  return (
+    <section className="card animate-rise px-5 py-4" aria-live="polite">
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <p className="eyebrow">Agent activity</p>
+          <h2 className="mt-1 font-medium">{active ? stages[current] : "Processing complete"}</h2>
+        </div>
+        <span className="text-[12px] tabular-nums text-ink-500">{active ? `${current} / ${stages.length}` : "6 / 6"}</span>
+      </div>
+      <ol className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+        {stages.map((stage, index) => {
+          const done = !active || index < current;
+          const now = active && index === current;
+          return (
+            <li key={stage} className={`flex items-center gap-2 rounded-md px-2.5 py-2 text-[12px] ${
+              now ? "bg-teal-light/70 font-medium text-teal" : done ? "bg-forest-light/50 text-forest" : "bg-paper text-ink-300"
+            }`}>
+              <span className={`grid h-5 w-5 shrink-0 place-items-center rounded-full text-[10px] ${
+                now ? "bg-teal text-white" : done ? "bg-forest text-white" : "border border-ink/15"
+              }`}>{done ? "✓" : index + 1}</span>
+              <span>{stage}</span>
+            </li>
+          );
+        })}
+      </ol>
+    </section>
+  );
+}
+
 export function GroupChip({ group }: { group: string }) {
   const g = GROUP_STYLE[group];
   if (!g) return <span className="text-[12px] text-ink-300">Not screened</span>;
