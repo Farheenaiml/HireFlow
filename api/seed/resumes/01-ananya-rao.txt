@@ -1,0 +1,26 @@
+Ananya Rao
+ananya.rao@mailbox.example | +91 98765 43210 | linkedin.com/in/ananyarao | Bengaluru
+
+SUMMARY
+Backend engineer with 6 years of experience building payment and ledger systems in Python. She has owned services from design through production support.
+
+EXPERIENCE
+Senior Software Engineer, Fintech Platform Co - Mar 2022 to Present
+Designed and operated the double-entry ledger service in Python and FastAPI handling 2.1M transactions per day.
+Owned the settlement reconciliation pipeline that matches bank statements against internal ledger entries every night.
+Rewrote the PostgreSQL schema for ledger entries and added partial indexes, cutting p95 query latency from 840ms to 110ms.
+Carried the primary on-call pager for the payments group and led 9 incident reviews in two years.
+Published four design documents reviewed by the risk and compliance teams before rollout.
+
+Software Engineer, Commerce Systems Pvt Ltd - Jul 2019 to Feb 2022
+Built REST APIs in Django for the order and refund flows used by 400 merchant partners.
+Moved order events onto Kafka, replacing a nightly batch job with a streaming consumer.
+
+SKILLS
+Python, FastAPI, Django, PostgreSQL, Kafka, Redis, Docker, Kubernetes, Grafana, Prometheus, pytest
+
+EDUCATION
+B.Tech in Computer Science, National Institute of Technology Surathkal, 2019
+
+CERTIFICATIONS
+AWS Certified Solutions Architect - Associate

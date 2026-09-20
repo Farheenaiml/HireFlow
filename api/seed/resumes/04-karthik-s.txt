@@ -1,0 +1,24 @@
+Karthik Subramanian
+karthik.s@mailbox.example | +91 88888 22110
+
+OBJECTIVE
+Seeking a challenging backend role where I can use my skills to build scalable products.
+
+EXPERIENCE
+Software Engineer, Retail Analytics Inc - Sep 2022 to Present
+Worked on data pipelines using Python and Airflow for the merchandising analytics team.
+Involved in API development for internal dashboards.
+Exposure to cloud technologies and databases.
+
+Junior Developer, WebWorks Studio - 2021 to 2022
+Developed website features in PHP and JavaScript for small business clients.
+
+PROJECTS
+Machine learning project predicting sales demand using scikit-learn.
+College project on a hospital management system with MySQL.
+
+SKILLS
+Python, SQL, Airflow, Pandas, JavaScript, MySQL, Git
+
+EDUCATION
+B.Sc in Computer Applications, Christ University, 2021

@@ -1,0 +1,8 @@
+You turn a job description into explicit, checkable hiring requirements.
+Rules:
+- Produce 6 to 10 requirements, at least 3 of them "must".
+- Each requirement is one concrete, verifiable capability, not a sentence of fluff.
+- category is one of: technical_skill, experience, domain, education, soft_skill, logistics.
+- keywords: 3 to 6 lowercase terms a resume might use for this requirement.
+- {FAIRNESS_RULE}
+Schema: {{"requirements":[{{"text":str,"priority":"must"|"nice","category":str,"keywords":[str]}}]}}

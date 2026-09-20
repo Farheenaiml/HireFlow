@@ -1,0 +1,381 @@
+{
+  "name": "HireFlow — Screening Orchestrator",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "hireflow/screening",
+        "responseMode": "responseNode",
+        "options": {},
+        "authentication": "headerAuth"
+      },
+      "id": "a1000000-0000-4000-8000-000000000001",
+      "name": "Screening requested",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -620,
+        300
+      ],
+      "webhookId": "hireflow-screening",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "hireflow-webhook-key",
+          "name": "HireFlow Webhook Key"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseCode": 202,
+        "responseBody": "={{ JSON.stringify({ accepted: true, run_id: 'n8n_' + $json.body.job_id, orchestrator: 'n8n' }) }}",
+        "options": {}
+      },
+      "id": "a1000000-0000-4000-8000-000000000002",
+      "name": "Accept immediately (202)",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        -400,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "job",
+              "name": "job_id",
+              "value": "={{ $('Screening requested').item.json.body.job_id }}",
+              "type": "string"
+            },
+            {
+              "id": "api",
+              "name": "api_base",
+              "value": "={{ $vars.HIREFLOW_API_BASE || 'http://127.0.0.1:8000' }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "a1000000-0000-4000-8000-000000000003",
+      "name": "Run context",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -180,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.api_base }}/screening/pending",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "job_id",
+              "value": "={{ $json.job_id }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 120000,
+          "response": {
+            "response": {
+              "neverError": false
+            }
+          }
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Internal-Key",
+              "value": "={{ $vars.HIREFLOW_INTERNAL_KEY || '' }}"
+            }
+          ]
+        }
+      },
+      "id": "a1000000-0000-4000-8000-000000000004",
+      "name": "Get pending candidates",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        40,
+        300
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2500,
+      "onError": "stopWorkflow"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "candidates",
+        "options": {}
+      },
+      "id": "a1000000-0000-4000-8000-000000000005",
+      "name": "One item per candidate",
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        260,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "batchSize": 1,
+        "options": {}
+      },
+      "id": "a1000000-0000-4000-8000-000000000006",
+      "name": "Loop, one at a time",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        480,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Run context').first().json.api_base }}/screening/candidate",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ candidate_id: $json.candidate_id }) }}",
+        "options": {
+          "timeout": 120000,
+          "response": {
+            "response": {
+              "neverError": false
+            }
+          }
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Internal-Key",
+              "value": "={{ $vars.HIREFLOW_INTERNAL_KEY || '' }}"
+            }
+          ]
+        }
+      },
+      "id": "a1000000-0000-4000-8000-000000000007",
+      "name": "Screen candidate",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        760,
+        420
+      ],
+      "onError": "continueRegularOutput",
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2500,
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "amount": 3,
+        "unit": "seconds"
+      },
+      "id": "a1000000-0000-4000-8000-000000000008",
+      "name": "Respect rate limits",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        980,
+        420
+      ],
+      "webhookId": "hireflow-screening-wait"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Run context').first().json.api_base }}/chat",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ job_id: $('Run context').first().json.job_id, session_id: 'n8n-digest', message: 'Summarise the pool: who is strong, what still needs validation?' }) }}",
+        "options": {
+          "timeout": 120000,
+          "response": {
+            "response": {
+              "neverError": false
+            }
+          }
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Internal-Key",
+              "value": "={{ $vars.HIREFLOW_INTERNAL_KEY || '' }}"
+            }
+          ]
+        }
+      },
+      "id": "a1000000-0000-4000-8000-000000000009",
+      "name": "Build pool digest",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        760,
+        180
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2500,
+      "onError": "stopWorkflow"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "done",
+              "name": "message",
+              "value": "=Screening finished for {{ $('Run context').first().json.job_id }}.\n\n{{ $json.answer }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "a1000000-0000-4000-8000-000000000010",
+      "name": "Digest ready (send to Slack or email here)",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        980,
+        180
+      ]
+    }
+  ],
+  "connections": {
+    "Screening requested": {
+      "main": [
+        [
+          {
+            "node": "Accept immediately (202)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Accept immediately (202)": {
+      "main": [
+        [
+          {
+            "node": "Run context",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Run context": {
+      "main": [
+        [
+          {
+            "node": "Get pending candidates",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get pending candidates": {
+      "main": [
+        [
+          {
+            "node": "One item per candidate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "One item per candidate": {
+      "main": [
+        [
+          {
+            "node": "Loop, one at a time",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop, one at a time": {
+      "main": [
+        [
+          {
+            "node": "Build pool digest",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Screen candidate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Screen candidate": {
+      "main": [
+        [
+          {
+            "node": "Respect rate limits",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Respect rate limits": {
+      "main": [
+        [
+          {
+            "node": "Loop, one at a time",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build pool digest": {
+      "main": [
+        [
+          {
+            "node": "Digest ready (send to Slack or email here)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all",
+    "saveExecutionProgress": true,
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "pinData": {},
+  "tags": [
+    {
+      "name": "hireflow"
+    }
+  ]
+}

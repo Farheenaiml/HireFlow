@@ -1,0 +1,35 @@
+{
+  "_readme": "Hand-labelled expectations for the six synthetic seed resumes (PRD Appendix A). Statuses are what a careful human recruiter would assign against the seed JD (R1-R7 must, R8-R10 nice). Used by GET /quality and tests/test_golden.py.",
+  "candidates": {
+    "01-ananya-rao.txt": {
+      "designed_to_test": "Strong and specific: clear quantified evidence everywhere",
+      "group": "Strong",
+      "statuses": {"R1":"met","R2":"met","R3":"met","R4":"met","R5":"met","R6":"met","R7":"met","R8":"unclear","R9":"missing","R10":"unclear"}
+    },
+    "02-rahul-menon.txt": {
+      "designed_to_test": "Vague claims: billing module, on-call and RabbitMQ without depth",
+      "group": "Potential",
+      "statuses": {"R1":"met","R2":"partial","R3":"met","R4":"partial","R5":"partial","R6":"missing","R7":"met","R8":"missing","R9":"missing","R10":"missing"}
+    },
+    "03-priya-desai.txt": {
+      "designed_to_test": "Prestigious-institution line + leadership; skills-list-only claims stay unclear",
+      "group": "Potential",
+      "statuses": {"R1":"partial","R2":"partial","R3":"unclear","R4":"met","R5":"met","R6":"partial","R7":"unclear","R8":"unclear","R9":"met","R10":"met"}
+    },
+    "04-karthik-s.txt": {
+      "designed_to_test": "Keyword-thin generalist: vague verbs, no depth, different domain",
+      "group": "Weak",
+      "statuses": {"R1":"partial","R2":"unclear","R3":"unclear","R4":"missing","R5":"missing","R6":"missing","R7":"missing","R8":"missing","R9":"missing","R10":"missing"}
+    },
+    "05-meera-iyer.txt": {
+      "designed_to_test": "Transferable platform skills; missing the payments domain must-have",
+      "group": "Potential",
+      "statuses": {"R1":"partial","R2":"partial","R3":"met","R4":"missing","R5":"met","R6":"met","R7":"missing","R8":"met","R9":"missing","R10":"missing"}
+    },
+    "06-arjun-nair.txt": {
+      "designed_to_test": "Career switcher / early-stage: right domain, thin scale evidence",
+      "group": "Potential",
+      "statuses": {"R1":"met","R2":"partial","R3":"met","R4":"met","R5":"partial","R6":"partial","R7":"missing","R8":"missing","R9":"missing","R10":"missing"}
+    }
+  }
+}

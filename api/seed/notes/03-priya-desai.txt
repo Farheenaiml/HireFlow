@@ -1,0 +1,15 @@
+Interview notes - Hiring manager round, 50 minutes.
+
+Payments and reconciliation: Excellent depth. She designed the reconciliation engine that matches UPI settlement files against the internal ledger every day. Explained how mismatches are queued for manual review and how idempotency keys prevent double posting.
+
+Compliance: Drove PCI DSS audit readiness for two consecutive years and worked on RBI reporting requirements. Described the evidence collection process in detail.
+
+Production ownership: Ran the on-call rota for the settlement platform, defined SLOs and built alerting on Prometheus and Grafana. Gave a clear incident example with a timeline.
+
+Team leadership and mentoring: Led six engineers and mentored four junior engineers into mid-level roles. Runs an internal design review forum.
+
+Written communication: Writes design documents for cross team review and described the review template her team uses.
+
+Python and REST APIs: Recent hands-on work is mostly in Java. She said her Python is a few years old and she would need time to get current with FastAPI. Did not give a recent Python example.
+
+Not discussed: PostgreSQL schema design and indexing, Kafka in production, Kubernetes.

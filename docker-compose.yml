@@ -1,0 +1,39 @@
+# One command to run HireFlow and n8n together:  docker compose up --build
+services:
+  api:
+    build: .
+    ports: ["8000:8000"]
+    environment:
+      - LLM_PROVIDER=${LLM_PROVIDER:-groq}
+      - GROQ_API_KEY=${GROQ_API_KEY:-}
+      - GROQ_MODEL=${GROQ_MODEL:-llama-3.3-70b-versatile}
+      - USE_N8N=${USE_N8N:-true}
+      - N8N_BASE_URL=http://n8n:5678
+      - N8N_API_KEY=${N8N_API_KEY:-}
+      - INTERNAL_KEY=${INTERNAL_KEY:-}
+      - HIREFLOW_DB=/data/hireflow.db
+    volumes:
+      - api-data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8000/health"]
+      interval: 20s
+      timeout: 5s
+      retries: 5
+
+  n8n:
+    image: n8nio/n8n:latest
+    ports: ["5678:5678"]
+    environment:
+      - N8N_SECURE_COOKIE=false
+      - GENERIC_TIMEZONE=Asia/Kolkata
+      # n8n reaches the API by service name inside the compose network
+      - N8N_VARIABLES_HIREFLOW_API_BASE=http://api:8000
+    volumes:
+      - n8n-data:/home/node/.n8n
+      - ./n8n:/workflows:ro
+    depends_on:
+      - api
+
+volumes:
+  api-data:
+  n8n-data:

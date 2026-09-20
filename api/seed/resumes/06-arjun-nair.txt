@@ -1,0 +1,25 @@
+Arjun Nair
+arjun.nair@mailbox.example | +91 95555 66778 | Kochi
+
+PROFILE
+Full stack developer with 4 years of experience. He has worked across Python backends and React frontends for early stage startups.
+
+EXPERIENCE
+Full Stack Developer, Ledgerly (seed stage) - Feb 2022 to Present
+Built the backend for a small business accounting product using Python and FastAPI.
+Implemented the double entry bookkeeping model and the monthly reconciliation report.
+Designed the PostgreSQL schema for accounts, journals and transactions.
+Set up basic alerting with Sentry and responded to production issues as the only backend engineer.
+Wrote the API documentation used by two integration partners.
+
+Developer, Freelance - 2020 to 2022
+Delivered REST APIs in Flask for three client projects, including an invoicing tool.
+
+PROJECTS
+Side project: a reconciliation script matching Razorpay settlement reports to internal invoices.
+
+SKILLS
+Python, FastAPI, Flask, React, PostgreSQL, SQLAlchemy, Docker, Sentry
+
+EDUCATION
+B.Tech in Computer Science, Cochin University of Science and Technology, 2020

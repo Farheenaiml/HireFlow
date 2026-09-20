@@ -1,0 +1,15 @@
+Interview notes - Technical deep dive, 60 minutes.
+
+Payments and ledgers: Walked through the double-entry ledger service she built in Python and FastAPI. Explained how payments are posted atomically and how idempotency keys work. The settlement reconciliation pipeline flags mismatches every night and correctness is checked against bank statements.
+
+PostgreSQL: Described the partial indexes added to the ledger entries table and showed how p95 query latency dropped from 840ms to 110ms. Talked through schema design trade offs for entries and balances.
+
+REST APIs: Designed the order and refund APIs used by 400 merchant partners. Discussed pagination, versioning and rate limiting.
+
+Event-driven systems: Moved order events onto Kafka and replaced a nightly batch job with a streaming consumer. Explained consumer groups, offsets and how duplicate events are handled.
+
+Production ownership: Carried the primary on-call pager for the payments group and led nine incident reviews in two years. Described the alerting dashboards in Grafana and Prometheus.
+
+Written communication: Published four design documents reviewed by risk and compliance teams before rollout.
+
+Not discussed: mentoring approach, PCI DSS or RBI compliance work in depth.

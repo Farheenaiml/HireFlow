@@ -1,0 +1,23 @@
+Meera Iyer
+meera.iyer@mailbox.example | +91 97777 33445 | linkedin.com/in/meeraiyer
+
+SUMMARY
+Platform engineer with 7 years of experience running production infrastructure and backend services.
+
+EXPERIENCE
+Staff Platform Engineer, CloudScale Systems - Apr 2021 to Present
+Operated Kubernetes clusters running 180 microservices across three regions.
+Built internal REST APIs in Python and Go for the deployment control plane.
+Owned observability: Prometheus, Grafana, distributed tracing, and the incident response process.
+Reduced mean time to detection for production incidents from 22 minutes to 4 minutes.
+Wrote the platform design documents reviewed quarterly by the architecture council.
+
+Site Reliability Engineer, Media Streaming Co - 2018 to 2021
+Managed PostgreSQL and Redis fleets, including replication, backups and query tuning.
+Handled the on-call pager for streaming delivery services.
+
+SKILLS
+Python, Go, Kubernetes, Terraform, PostgreSQL, Redis, Prometheus, Grafana, AWS
+
+EDUCATION
+B.Tech in Electronics and Communication, Vellore Institute of Technology, 2017

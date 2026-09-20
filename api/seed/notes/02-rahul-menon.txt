@@ -1,0 +1,15 @@
+Interview notes - Backend Engineer panel, 45 minutes.
+
+Python and REST APIs: Walked through the shipment tracking service. He built the REST APIs in Python with Flask, around 30 endpoints, and owns the request validation layer. Clear and specific here.
+
+PostgreSQL: Described tuning slow queries on the shipments table. Added composite indexes and used EXPLAIN ANALYZE to cut a report query from 6 seconds to under one second. Has not done schema design from scratch.
+
+Payments and ledgers: Asked about financial correctness. He said the billing module generated invoices and he has worked on some money related logic. Could not explain how rounding or idempotency was handled.
+
+Production ownership: He is part of the on-call rotation. Mentioned handling incidents but did not describe a specific incident or what changed afterwards.
+
+Event-driven systems: Introduced RabbitMQ for notifications. Answer was short, said it worked fine and there were no issues. Did not talk about retries, ordering or dead letter queues.
+
+Mentoring: Reviews pull requests for two junior developers on the team.
+
+Not discussed: written design documents, Kubernetes, compliance environments.

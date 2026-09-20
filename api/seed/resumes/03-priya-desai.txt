@@ -1,0 +1,22 @@
+Priya Desai
+priya.desai@mailbox.example | +91 90000 11223 | Mumbai
+
+SUMMARY
+Engineering lead with 9 years across backend and platform work, most recently in regulated financial services. She has mentored seven engineers.
+
+EXPERIENCE
+Engineering Lead, Bank Technology Group - Jan 2020 to Present
+Led a team of six engineers owning the core payments settlement platform written in Java and Python.
+Designed the reconciliation engine that reconciles UPI settlement files against the internal ledger daily.
+Drove PCI DSS audit readiness for two consecutive years and worked with RBI reporting requirements.
+Ran the production on-call rota, defined SLOs and built the alerting stack on Prometheus and Grafana.
+Mentored four junior engineers into mid-level roles and ran the internal design review forum.
+
+Senior Engineer, Payments Startup - 2017 to 2019
+Built REST services on Django for merchant onboarding and KYC.
+
+SKILLS
+Java, Python, Django, PostgreSQL, Oracle, Kafka, Kubernetes, Terraform, PCI DSS, incident management
+
+EDUCATION
+M.Tech in Software Engineering, Birla Institute of Technology, 2016

@@ -1,0 +1,35 @@
+# Render blueprint — one service that serves both the API and the built web app.
+# Deploy: push this repo to GitHub, then Render → New → Blueprint → pick the repo.
+services:
+  - type: web
+    name: hireflow
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    plan: free
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: LLM_PROVIDER
+        value: groq
+      - key: GROQ_API_KEY
+        sync: false          # set this in the Render dashboard, never in git
+      - key: GROQ_MODEL
+        value: llama-3.3-70b-versatile
+      - key: SCREEN_DELAY
+        value: "2"
+      - key: LLM_MAX_RETRIES
+        value: "3"
+      - key: USE_N8N
+        value: "false"       # flip to true once n8n Cloud is wired up
+      - key: N8N_BASE_URL
+        sync: false
+      - key: N8N_API_KEY
+        sync: false
+      - key: INTERNAL_KEY
+        sync: false
+      - key: HIREFLOW_DB
+        value: /var/data/hireflow.db
+    disk:
+      name: hireflow-data
+      mountPath: /var/data
+      sizeGB: 1

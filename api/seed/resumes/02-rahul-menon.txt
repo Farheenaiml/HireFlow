@@ -1,0 +1,26 @@
+Rahul Menon
+rahul.menon@mailbox.example | +91 91234 56780 | github.com/rahulmenon
+
+PROFILE
+Backend developer with around 5 years of experience. He enjoys working on distributed systems and clean API design.
+
+EXPERIENCE
+Backend Engineer, LogiTrack Solutions - Aug 2021 to Present
+Built and maintained REST APIs in Python using Flask for the shipment tracking product.
+Worked on a billing module that generated monthly invoices for logistics partners.
+Tuned slow PostgreSQL queries on the shipments table and introduced composite indexes.
+Participated in the on-call rotation for the platform team and handled production incidents.
+Introduced RabbitMQ for asynchronous notification delivery.
+
+Associate Engineer, Softline Technologies - Jun 2019 to Jul 2021
+Maintained internal reporting services written in Python and wrote unit tests with pytest.
+
+PROJECTS
+Open source contribution to a Flask extension for request validation.
+Built a personal expense tracker with a simple ledger model.
+
+SKILLS
+Python, Flask, PostgreSQL, RabbitMQ, Docker, Git, Linux, pytest
+
+EDUCATION
+B.E. in Information Technology, Anna University, 2019

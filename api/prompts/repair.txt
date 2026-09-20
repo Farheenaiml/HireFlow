@@ -1,0 +1,5 @@
+Some quotes you returned do not appear in the resume.
+For each listed requirement, either copy an EXACT contiguous quote from the resume,
+or set status to "unclear" (or "missing" with an empty quote).
+Schema: {"evaluations":[{"req_id":str,"status":str,"quote":str,"reasoning":str,
+"needs_validation":bool,"validation_note":str}]}

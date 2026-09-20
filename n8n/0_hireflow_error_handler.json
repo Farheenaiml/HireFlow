@@ -1,0 +1,172 @@
+{
+  "name": "HireFlow — Error Handler (W0)",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "b0000000-0000-4000-8000-000000000001",
+      "name": "Any HireFlow workflow failed",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [-640, 300]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "api",
+              "name": "api_base",
+              "value": "={{ $vars.HIREFLOW_API_BASE || 'http://host.docker.internal:8000' }}",
+              "type": "string"
+            },
+            {
+              "id": "wfname",
+              "name": "workflow_name",
+              "value": "={{ $json.workflow?.name || 'unknown workflow' }}",
+              "type": "string"
+            },
+            {
+              "id": "node",
+              "name": "failed_node",
+              "value": "={{ $json.execution?.lastNodeExecuted || 'unknown node' }}",
+              "type": "string"
+            },
+            {
+              "id": "msg",
+              "name": "error_message",
+              "value": "={{ $json.execution?.error?.message || $json.execution?.error || 'no message' }}",
+              "type": "string"
+            },
+            {
+              "id": "jid",
+              "name": "job_id",
+              "value": "={{ $json.execution?.error?.job_id || $json.workflow?.job_id || null }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "b0000000-0000-4000-8000-000000000002",
+      "name": "Normalise the failure",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [-400, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $json.api_base }}/n8n/error",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "X-Internal-Key", "value": "={{ $vars.HIREFLOW_INTERNAL_KEY || '' }}" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ workflow: $('Any HireFlow workflow failed').item.json.workflow, execution: $('Any HireFlow workflow failed').item.json.execution, job_id: $json.job_id, error: $json.error_message }) }}",
+        "options": { "timeout": 15000 }
+      },
+      "id": "b0000000-0000-4000-8000-000000000003",
+      "name": "Write to the HireFlow audit trail",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [-160, 300],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "onError": "continueRegularOutput",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": false, "version": 2 },
+          "conditions": [
+            {
+              "id": "isScreening",
+              "operator": { "type": "string", "operation": "contains" },
+              "leftValue": "={{ $('Normalise the failure').item.json.workflow_name }}",
+              "rightValue": "Screening"
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "b0000000-0000-4000-8000-000000000004",
+      "name": "Was it a screening run?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [80, 300]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "alert",
+              "name": "alert",
+              "value": "=🚨 HireFlow screening run failed.\nWorkflow: {{ $('Normalise the failure').item.json.workflow_name }}\nNode: {{ $('Normalise the failure').item.json.failed_node }}\nError: {{ $('Normalise the failure').item.json.error_message }}\n\nCandidates left in 'queued' will be picked up by the next run, and the API falls back to its built-in runner if n8n stays down. Nothing was lost.",
+              "type": "string"
+            },
+            { "id": "severity", "name": "severity", "value": "high", "type": "string" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "b0000000-0000-4000-8000-000000000005",
+      "name": "Page the on-call recruiter ops (wire Slack/email here)",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [320, 200]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "alert",
+              "name": "alert",
+              "value": "=⚠️ HireFlow automation failed (non-blocking).\nWorkflow: {{ $('Normalise the failure').item.json.workflow_name }}\nNode: {{ $('Normalise the failure').item.json.failed_node }}\nError: {{ $('Normalise the failure').item.json.error_message }}",
+              "type": "string"
+            },
+            { "id": "severity", "name": "severity", "value": "low", "type": "string" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "b0000000-0000-4000-8000-000000000006",
+      "name": "Log quietly",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [320, 400]
+    }
+  ],
+  "connections": {
+    "Any HireFlow workflow failed": {
+      "main": [[{ "node": "Normalise the failure", "type": "main", "index": 0 }]]
+    },
+    "Normalise the failure": {
+      "main": [[{ "node": "Write to the HireFlow audit trail", "type": "main", "index": 0 }]]
+    },
+    "Write to the HireFlow audit trail": {
+      "main": [[{ "node": "Was it a screening run?", "type": "main", "index": 0 }]]
+    },
+    "Was it a screening run?": {
+      "main": [
+        [{ "node": "Page the on-call recruiter ops (wire Slack/email here)", "type": "main", "index": 0 }],
+        [{ "node": "Log quietly", "type": "main", "index": 0 }]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all",
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "tags": [{ "name": "hireflow" }],
+  "pinData": {}
+}
